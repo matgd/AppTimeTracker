@@ -11,7 +11,7 @@ from time import sleep
 SQLITE_FILE = "timetracker.db"
 APPS_TABLE_NAME = "apps"
 TIME_TRACKING_TABLE_NAME = "time_tracking"
-TRACKED_APPS = ["code", "firefox", "pycharm", "konsole"]
+TRACKED_APPS = ["code", "firefox", "pycharm", "konsole", "spotify", "nvim"]
 DEFAULT_SLEEP_TIME = 60
 
 argparser = argparse.ArgumentParser()
@@ -27,8 +27,11 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s (main.py:%(lineno)s)"
 )
 
-def debug_log_app(app: str, message: str):
+def log_debug_app(app: str, message: str):
     logging.debug(f"[{app}] {message}")
+
+def log_info_app(app: str, message: str):
+    logging.info(f"[{app}] {message}")
 
 class SQLiteTable(ABC):
     _table_name = ""
@@ -123,10 +126,10 @@ def _exit(signum, frame):
                 end_time=encode_time(now),
                 seconds=secs
             )
-            debug_log_app(app, "App was running when signal was received")
-            debug_log_app(app, f"Inserted time tracking record for {now - start} ({secs}s)")
+            log_debug_app(app, "App was running when signal was received")
+            log_info_app(app, f"Inserted time tracking record lasting from {now} ({secs // 60}m {secs % 60}s)")
             cur.connection.commit()
-            debug_log_app(app, "Committed transaction")
+            log_debug_app(app, "Committed transaction")
 
         print("\nClosing connection...", end="")
         _cursor_to_close.connection.close()
@@ -176,32 +179,33 @@ populate_time_tracking_table_if_needed(cur)
 app_name_id_mapping = apps_table.get_app_name_id_mapping(cur)
 
 
+logging.info("Starting main loop")
 while True:
     for app in TRACKED_APPS:
         now = datetime.datetime.now()
-        debug_log_app(app, "Checking state of the app")
+        log_debug_app(app, "Checking state of the app")
         if app_running(app):
-            debug_log_app(app, " App is running")
+            log_debug_app(app, " App is running")
             match _app_started_time.get(app):
                 # Non-present cycle ago but runs now
                 case None:
-                    debug_log_app(app, "  App has just started running")
+                    log_debug_app(app, "  App has just started running")
                     _app_started_time[app] = now
                 # Present cycle ago and keeps running
                 case start:
-                    debug_log_app(app, f"  App has been running since {start}")
+                    log_debug_app(app, f"  App has been running since {start}")
                     pass
         else:
-            debug_log_app(app, " App is not running")
+            log_debug_app(app, " App is not running")
             match _app_started_time.get(app):
                 # Non-present cycle ago and still not running
                 case None:
-                    debug_log_app(app, "  App is not running and was not running before")
+                    log_debug_app(app, "  App is not running and was not running before")
                     pass
                 # Present cycle ago but stopped now
                 case start:
-                    debug_log_app(app, "  App has stopped running")
-                    debug_log_app(app, f"  App was running for {now - start}")
+                    log_debug_app(app, "  App has stopped running")
+                    log_debug_app(app, f"  App was running for {now - start}")
                     secs = (now - start).seconds
                     time_tracking_table.insert(
                         cur,
@@ -210,11 +214,11 @@ while True:
                         end_time=encode_time(now),
                         seconds=(now - start).seconds
                     )
-                    debug_log_app(app, f"  Inserted time tracking record for {now - start} ({secs}s)")
+                    log_debug_app(app, f"  Inserted time tracking record for {now - start} ({secs}s)")
                     cur.connection.commit()
-                    debug_log_app(app, "  Committed transaction")
+                    log_debug_app(app, "  Committed transaction")
                     del _app_started_time[app]
-                    debug_log_app(app, "  Deleted app from tracking")
+                    log_debug_app(app, "  Deleted app from tracking")
 
     logging.debug("Sleeping for %s seconds", args.sleep_time)
     sleep(args.sleep_time)
