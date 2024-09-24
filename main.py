@@ -11,7 +11,7 @@ from time import sleep
 SQLITE_FILE = "timetracker.db"
 APPS_TABLE_NAME = "apps"
 TIME_TRACKING_TABLE_NAME = "time_tracking"
-TRACKED_APPS = ["code", "firefox", "pycharm", "konsole", "spotify", "nvim"]
+TRACKED_APPS = ["code", "firefox", "pycharm", "konsole", "spotify", "nvim", "foot"]
 DEFAULT_SLEEP_TIME = 60
 
 argparser = argparse.ArgumentParser()
@@ -20,6 +20,7 @@ argparser.add_argument("--debug", action="store_true")
 argparser.add_argument("--clear-db", action="store_true")
 argparser.add_argument("--report", action="store_true")
 argparser.add_argument("--hour-report", action="store_true")
+argparser.add_argument("--hour-report-for", type=str)
 args = argparser.parse_args()
 
 logging.basicConfig(
@@ -169,6 +170,15 @@ elif args.hour_report:
         h = total_s / 3600
         # Print table
         print("{:<20} {:.1f}h".format(app_name, h))
+    sys.exit(0)
+elif args.hour_report_for:
+    for row in time_tracking_table.get_app_time_sum(cur):
+        app_name, total_s = row
+        if app_name == args.hour_report_for:
+            app_name, total_s = row
+            h = total_s / 3600
+            # Print table
+            print("{:.1f}".format(h))
     sys.exit(0)
 
 apps_table.create_table_if_not_exists(cur)
