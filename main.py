@@ -21,6 +21,8 @@ argparser.add_argument("--clear-db", action="store_true")
 argparser.add_argument("--report", action="store_true")
 argparser.add_argument("--hour-report", action="store_true")
 argparser.add_argument("--hour-report-for", type=str)
+argparser.add_argument("--add-minutes", type=str)
+argparser.add_argument("--for-app", type=str)
 args = argparser.parse_args()
 
 logging.basicConfig(
@@ -179,6 +181,19 @@ elif args.hour_report_for:
             h = total_s / 3600
             # Print table
             print("{:.1f}".format(h))
+    sys.exit(0)
+elif args.add_minutes:
+    app_name = args.for_app
+    now = datetime.datetime.now()
+    ago = datetime.datetime.now() - datetime.timedelta(minutes=int(args.add_minutes))
+    time_tracking_table.insert(
+        cur,
+        app_id=apps_table.get_app_name_id_mapping(cur)[app_name],
+        start_time=encode_time(ago),
+        end_time=encode_time(now),
+        seconds=int(args.add_minutes) * 60
+    )
+    cur.connection.commit()
     sys.exit(0)
 
 apps_table.create_table_if_not_exists(cur)
