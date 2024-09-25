@@ -205,6 +205,7 @@ app_name_id_mapping = apps_table.get_app_name_id_mapping(cur)
 
 
 logging.info("Starting main loop")
+logging.info("Tracking apps: %s", TRACKED_APPS)
 while True:
     for app in TRACKED_APPS:
         now = datetime.datetime.now()
