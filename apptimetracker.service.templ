@@ -1,0 +1,13 @@
+[Unit]
+Description=AppTimeTracker
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+User={USER}
+WorkingDirectory={PWD}
+ExecStart={PWD}/timetracker_run.sh
+
+[Install]
+WantedBy=multi-user.target

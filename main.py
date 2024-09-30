@@ -19,10 +19,11 @@ argparser.add_argument("--sleep-time", type=int, default=DEFAULT_SLEEP_TIME)
 argparser.add_argument("--debug", action="store_true")
 argparser.add_argument("--clear-db", action="store_true")
 argparser.add_argument("--report", action="store_true")
+argparser.add_argument("--report-last-entries", type=int)
 argparser.add_argument("--hour-report", action="store_true")
 argparser.add_argument("--hour-report-for", type=str)
 argparser.add_argument("--add-minutes", type=str)
-argparser.add_argument("--for-app", type=str)
+argparser.add_argument("--for-apps", type=str)
 args = argparser.parse_args()
 
 logging.basicConfig(
@@ -183,18 +184,36 @@ elif args.hour_report_for:
             print("{:.1f}".format(h))
     sys.exit(0)
 elif args.add_minutes:
-    app_name = args.for_app
+    app_names = args.for_apps.split(",")
     now = datetime.datetime.now()
     ago = datetime.datetime.now() - datetime.timedelta(minutes=int(args.add_minutes))
-    time_tracking_table.insert(
-        cur,
-        app_id=apps_table.get_app_name_id_mapping(cur)[app_name],
-        start_time=encode_time(ago),
-        end_time=encode_time(now),
-        seconds=int(args.add_minutes) * 60
-    )
+    for app_name in app_names:
+        time_tracking_table.insert(
+            cur,
+            app_id=apps_table.get_app_name_id_mapping(cur)[app_name],
+            start_time=encode_time(ago),
+            end_time=encode_time(now),
+            seconds=int(args.add_minutes) * 60
+        )
+        log_info_app(app_name, f"Added {args.add_minutes} minutes")
     cur.connection.commit()
+    logging.info("Committed transaction")
     sys.exit(0)
+elif args.report_last_entries:
+    # Show start time and end time of last n entries
+
+    # Use LIMIT in the future as improvement
+    for row in time_tracking_table.join_apps_table(cur).fetchall()[-args.report_last_entries:]:
+        app_id, start_time, end_time, seconds, app_name = row
+        start_time = decode_time(start_time).strftime("%Y-%m-%d %H:%M:%S")
+        end_time = decode_time(end_time).strftime("%Y-%m-%d %H:%M:%S")
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        seconds = seconds % 60
+        print("{:<10} | {} -> {} |  {:02d}h {:02d}m {:02d}s".format(app_name, start_time, end_time, hours, minutes, seconds))
+    sys.exit(0)
+
+
 
 apps_table.create_table_if_not_exists(cur)
 time_tracking_table.create_table_if_not_exists(cur)
