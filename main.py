@@ -11,7 +11,17 @@ from time import sleep
 SQLITE_FILE = "timetracker.db"
 APPS_TABLE_NAME = "apps"
 TIME_TRACKING_TABLE_NAME = "time_tracking"
-TRACKED_APPS = ["code", "firefox", "pycharm", "konsole", "spotify", "nvim", "foot"]
+TRACKED_APPS = [
+    "code",
+    "codium",
+    "firefox",
+    "foot",
+    "konsole",
+    "nvim",
+    "pycharm",
+    "spotify",
+    "zed-editor",
+]
 DEFAULT_SLEEP_TIME = 60
 
 argparser = argparse.ArgumentParser()
