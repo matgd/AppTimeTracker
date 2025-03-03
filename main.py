@@ -11,7 +11,7 @@ from time import sleep
 SQLITE_FILE = "timetracker.db"
 APPS_TABLE_NAME = "apps"
 TIME_TRACKING_TABLE_NAME = "time_tracking"
-TRACKED_APPS = [
+TRACKED_APPS = [  # Should use conf file
     "code",
     "codium",
     "firefox",
