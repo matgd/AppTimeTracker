@@ -16,6 +16,7 @@ TRACKED_APPS = [
     "codium",
     "firefox",
     "foot",
+    "ghostty",
     "konsole",
     "nvim",
     "pycharm",
