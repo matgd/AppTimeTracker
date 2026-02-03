@@ -22,6 +22,9 @@ TRACKED_APPS = [  # Should use conf file
     "pycharm",
     "spotify",
     "zed-editor",
+    "kitty",
+    "hx",
+    "ehx",
 ]
 DEFAULT_SLEEP_TIME = 60
 
